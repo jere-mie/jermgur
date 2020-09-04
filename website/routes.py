@@ -1,7 +1,7 @@
 from flask import render_template, url_for, flash, redirect, request
-from blog import app, db
-from blog.forms import Registration, Login, PostForm
-from blog.models import User, Post, Reply
+from website import app, db
+from website.forms import Registration, Login, PostForm
+from website.models import User, Post, Reply
 from flask_login import login_user, current_user, logout_user, login_required
 
 @app.route('/', methods=['GET'])
