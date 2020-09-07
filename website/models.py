@@ -14,13 +14,15 @@ class User(db.Model, UserMixin):
     replies = db.relationship('Reply', backref='writer', lazy=True)
 
     def __repr__(self):
-        return f"Username: {self.username}, Email: {self.email}"
+        return f"Username: {self.username}"
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
     date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    image = db.Column(db.String(100), unique=True)
     content = db.Column(db.Text, nullable=False)
+    public = db.Column(db.Boolean, default=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     replies = db.relationship('Reply', backref='original', lazy=True)
 
