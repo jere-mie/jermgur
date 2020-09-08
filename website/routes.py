@@ -1,13 +1,15 @@
 from flask import render_template, url_for, flash, redirect, request
 from website import app, db
-from website.forms import Registration, Login, PostForm
+from website.forms import Register, Login, PostForm, ReplyForm
 from website.models import User, Post, Reply
 from flask_login import login_user, current_user, logout_user, login_required
+import os
 
 @app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
 def home():
-    posts = Post.query.all()
+    posts = Post.query.filter_by(public=True).all()
+    # posts = Post.query.all()
     posts.reverse()
     return render_template('home.html', posts=posts)
 
@@ -15,16 +17,26 @@ def home():
 def about():
     return render_template('about.html')
 
+@app.route('/account', methods=['GET'])
+@login_required
+def account():
+    posts = Post.query.filter_by(author=current_user).all()
+    # posts = Post.query.all()
+    posts.reverse()
+    return render_template('account.html', posts=posts)
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
+        flash('You are already authenticated','success')
         return redirect(url_for('home'))
-    form = Registration()
+    form = Register()
     if form.validate_on_submit():
         user = User(username=form.username.data, password=form.password.data)
         db.session.add(user)
         db.session.commit()
+        if not os.path.exists(f"website/uploads/{form.username.data}"):
+            os.mkdir(f"website/static/uploads/{form.username.data}")
         flash(f'Created account for {form.username.data}. You may now log in.', 'success')
         return redirect(url_for('login'))
 
@@ -33,6 +45,7 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
+        flash('You are already authenticated','success')
         return redirect(url_for('home'))
     form = Login()
     if form.validate_on_submit():
@@ -55,9 +68,10 @@ def logout():
 def newPost():
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(title=form.title.data, content=form.content.data, author=current_user)
+        post = Post(title=form.title.data, content=form.content.data, author=current_user, public=form.public.data, image=form.image.data.filename)
         db.session.add(post)
         db.session.commit()
+        form.image.data.save(f"website/static/uploads/{current_user.username}/"+form.image.data.filename)
         flash('You have successfully made a post!', 'success')
         return redirect(url_for("home"))
     return render_template("newPost.html", form=form, legend='Create a Post')
@@ -73,6 +87,7 @@ def deletePost(post_id):
             db.session.delete(reply)
     db.session.delete(post)
     db.session.commit()
+    os.remove(f'website/static/uploads/{current_user.username}/{post.image}')
     flash('Successfully deleted post!', 'success')
     return redirect(url_for('home'))
 
@@ -86,14 +101,19 @@ def updatePost(post_id):
     form = PostForm()
     
     if form.validate_on_submit():
+        os.remove(f'website/static/uploads/{current_user.username}/{post.image}')
         post.title = form.title.data
         post.content = form.content.data
+        post.image = form.image.data.filename
+        post.public = form.public.data
         db.session.commit()
+        form.image.data.save(f"website/static/uploads/{current_user.username}/"+form.image.data.filename)
         flash('You have successfully updated the post!', 'success')
         return redirect(url_for("home"))
     elif request.method == 'GET':
         form.title.data = post.title
         form.content.data = post.content
+        form.public.data = post.public
     return render_template("newPost.html", form=form, legend='Update Post')
 
 
@@ -105,11 +125,11 @@ def seePost(post_id):
 @app.route('/post/<post_id>/reply', methods=['GET', 'POST'])
 def reply(post_id):
     post = Post.query.get_or_404(post_id)
-    form = PostForm()
+    form = ReplyForm()
     if form.validate_on_submit():
         reply = Reply(title=form.title.data, content=form.content.data, writer=current_user, original=post)
         db.session.add(reply)
         db.session.commit()
-        flash('You have successfully added a post!', 'success')
+        flash('You have successfully added a reply!', 'success')
         return render_template('post.html', post=post)
-    return render_template("newPost.html", form=form, legend='Reply to a Post')
+    return render_template("reply.html", form=form, legend='Reply to a Post')

@@ -1,0 +1,17 @@
+.lighter{
+    background-color: rgb(14, 14, 14);
+    color: white;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
+    padding: 25px;
+}
+
+.thin{
+    font-weight: 200;
+}
+
+.center{
+    text-align: center;
+}

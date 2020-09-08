@@ -23,13 +23,16 @@ class Login(FlaskForm):
     rememberMe = BooleanField('Remember Me')
     submit = SubmitField('Sign In')  
 
-
-
 class PostForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(min=5, max=50)])
     image = FileField('Upload Image', validators=[DataRequired()])
-    public = BooleanField("Public?")
-    # content = TextAreaField('Content', validators=[DataRequired()])
+    public = BooleanField("Is This Public")
+    content = TextAreaField('Content', validators=[DataRequired()])
+    submit = SubmitField('Post')
+
+class ReplyForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired(), Length(min=5, max=50)])
+    content = TextAreaField('Content', validators=[DataRequired()])
     submit = SubmitField('Post')
 
 
