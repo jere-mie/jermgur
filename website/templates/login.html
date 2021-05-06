@@ -35,12 +35,12 @@
             <div class="form-check">
                 {{ form.rememberMe(class="form-check-input") }}
                 {{ form.rememberMe.label(class="form-check-label") }}
-            </div>
+            </div><br>
             <div class="form-group">
                 {{ form.submit(class='btn btn-outline-primary') }}
             </div>
         </form>
         <br><br>
-        <h3><a href="{{ url_for('register') }}">Need an Account?</a></h3>
+        <h3>Need an Account? <a href="{{ url_for('register') }}">Register Here</a></h3>
     </div>
 {% endblock %}

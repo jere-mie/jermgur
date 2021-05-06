@@ -34,13 +34,3 @@ class ReplyForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(min=5, max=50)])
     content = TextAreaField('Content', validators=[DataRequired()])
     submit = SubmitField('Post')
-
-
-    # id = db.Column(db.Integer, primary_key=True)
-    # title = db.Column(db.String(100), nullable=False)
-    # date = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    # image = db.Column(db.String(100), unique=True)
-    # content = db.Column(db.Text, nullable=False)
-    # public = db.Column(db.Boolean, default=True, nullable=False)
-    # user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    # replies = db.relationship('Reply', backref='original', lazy=True)

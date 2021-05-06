@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Anonymous Chat</title>
+        <title>Jermgur</title>
 
         <!--Metadata-->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width">
-        <meta property="og:site_name" content="Anonymous Chat" />
-        <meta property="og:title" content="Anonymous Chat" />
-        <meta property="og:description" content="A place to post without fear of being judged"/>
+        <meta property="og:site_name" content="Jermgur" />
+        <meta property="og:title" content="An Online Image Repo" />
+        <meta property="og:description" content="A place to post your images - made by Jeremie Bornais for the Shopify Backend Intern Challenge"/>
         <meta property="og:type" content="website" />
 
         <!--Style-->
@@ -29,9 +29,9 @@
                     <li class="nav-item active">
                         <a class="nav-link" href="{{ url_for('home') }}">Home</a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('about') }}">About</a>
-                    </li>
+                    </li> -->
                     {% if current_user.is_authenticated %}
                         <li class="nav-item">
                             <a class="nav-link" href="{{ url_for('newPost') }}">New Post</a>
@@ -68,7 +68,9 @@
                     {% endwith %}
                     {% block content %}{% endblock %}
                 </div>
-                <div class="col-md-4"></div>
+                <div class="col-md-4">
+                    {% block side %}{% endblock %}
+                </div>
             </div>
         </div>
         <br><br><br><br>

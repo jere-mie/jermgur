@@ -10,12 +10,12 @@
     <div class="lighter">
         <p>{{ post.author.username }} <small>  Posted on {{ post.date.strftime('%Y-%m-%d') }}</small></p>
         <hr>
-        <h3><a href="{{ url_for('seePost', post_id=post.id) }}" style="color:white">{{ post.title }}</a></h3>
+        <h3><a href="{{ url_for('seePost', post_id=post.anonid) }}" style="color:white">{{ post.title }}</a></h3>
         <img src="{{ url_for('static', filename='uploads/'+post.author.username+'/'+post.image) }}" width="500px">
         <p>{{ post.content }}</p>
         {% if current_user==post.author %}
-        <a href="{{ url_for('updatePost', post_id=post.id) }}">Edit</a>
-        <a href="{{ url_for('deletePost', post_id=post.id) }}">Delete</a>
+        <a href="{{ url_for('updatePost', post_id=post.anonid) }}">Edit</a>
+        <a href="{{ url_for('deletePost', post_id=post.anonid) }}">Delete</a>
         {% endif %}
     </div>
     {% endfor %}

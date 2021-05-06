@@ -1,12 +1,14 @@
 from flask import render_template, url_for, flash, redirect, request
 from website import app, db
 from website.forms import Register, Login, PostForm, ReplyForm
-from website.models import User, Post, Reply
+from website.models import User, Post, Reply, Sale
 from flask_login import login_user, current_user, logout_user, login_required
 import os
+import bcrypt
+import secrets
 
-@app.route('/', methods=['GET'])
 @app.route('/home', methods=['GET'])
+@app.route('/', methods=['GET'])
 def home():
     posts = Post.query.filter_by(public=True).all()
     # posts = Post.query.all()
@@ -27,14 +29,19 @@ def account():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # we redirect the user if they're already authenticated
     if current_user.is_authenticated:
         flash('You are already authenticated','success')
         return redirect(url_for('home'))
-    form = Register()
-    if form.validate_on_submit():
-        user = User(username=form.username.data, password=form.password.data)
+
+    form = Register() # registration form
+    if form.validate_on_submit(): # if the form is submitted and validated
+        hashed = bcrypt.hashpw(form.password.data.encode('utf-8'), bcrypt.gensalt())
+        user = User(username=form.username.data, password=hashed)
         db.session.add(user)
         db.session.commit()
+        if not os.path.exists(f"website/uploads"):
+            os.mkdir(f"website/static/uploads")
         if not os.path.exists(f"website/uploads/{form.username.data}"):
             os.mkdir(f"website/static/uploads/{form.username.data}")
         flash(f'Created account for {form.username.data}. You may now log in.', 'success')
@@ -50,7 +57,7 @@ def login():
     form = Login()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
-        if user and form.password.data==user.password:
+        if user and bcrypt.checkpw(form.password.data.encode('utf-8'), user.password):
             login_user(user, remember=form.rememberMe.data)
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('home'))
@@ -68,7 +75,12 @@ def logout():
 def newPost():
     form = PostForm()
     if form.validate_on_submit():
-        post = Post(title=form.title.data, content=form.content.data, author=current_user, public=form.public.data, image=form.image.data.filename)
+        while True:
+            anonid = secrets.token_hex(6)
+            temp = Post.query.filter_by(anonid=anonid).first()
+            if not temp:
+                break
+        post = Post(title=form.title.data, content=form.content.data, author=current_user, public=form.public.data, image=form.image.data.filename, anonid=anonid)
         db.session.add(post)
         db.session.commit()
         form.image.data.save(f"website/static/uploads/{current_user.username}/"+form.image.data.filename)
@@ -79,7 +91,8 @@ def newPost():
 @app.route('/post/<post_id>/delete', methods=['GET','POST'])
 @login_required
 def deletePost(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = Post.query.filter_by(anonid=post_id).first()
+    # post = Post.query.get_or_404(post_id)
     if post.author!=current_user:
         flash('You cannot delete someone else\'s post!', 'danger')
         return redirect(url_for('home'))
@@ -94,7 +107,8 @@ def deletePost(post_id):
 @app.route('/post/<post_id>/update', methods=['GET', 'POST'])
 @login_required
 def updatePost(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = Post.query.filter_by(anonid=post_id).first()
+    # post = Post.query.get_or_404(post_id)
     if post.author!=current_user:
         flash('You cannot update someone else\'s post!', 'danger')
         return redirect(url_for('home'))
@@ -119,12 +133,14 @@ def updatePost(post_id):
 
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
 def seePost(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = Post.query.filter_by(anonid=post_id).first()
+    # post = Post.query.get_or_404(post_id)
     return render_template('post.html', post=post)
 
 @app.route('/post/<post_id>/reply', methods=['GET', 'POST'])
 def reply(post_id):
-    post = Post.query.get_or_404(post_id)
+    post = Post.query.filter_by(anonid=post_id).first()
+    # post = Post.query.get_or_404(post_id)
     form = ReplyForm()
     if form.validate_on_submit():
         reply = Reply(title=form.title.data, content=form.content.data, writer=current_user, original=post)
