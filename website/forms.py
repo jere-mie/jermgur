@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, FileField
-from wtforms.validators import DataRequired, Length, EqualTo, ValidationError
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, FileField, DecimalField
+from wtforms.validators import DataRequired, Length, EqualTo, ValidationError, NumberRange
 from website.models import User, Post
 from website import db
 
@@ -26,9 +26,22 @@ class Login(FlaskForm):
 class PostForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(min=5, max=50)])
     image = FileField('Upload Image', validators=[DataRequired()])
-    public = BooleanField("Is This Public")
+    public = BooleanField("Is This Image Public?")
     content = TextAreaField('Content', validators=[DataRequired()])
+    title = StringField('Title', validators=[DataRequired(), Length(min=5, max=50)])
+    price = DecimalField('Price (If For Sale)', validators=[DataRequired(), NumberRange(min=0.0)])
+    forSale = BooleanField('Is This Image For Sale?')
     submit = SubmitField('Post')
+
+class EditForm(FlaskForm):
+    title = StringField('Title', validators=[DataRequired(), Length(min=5, max=50)])
+    public = BooleanField("Is This Image Public?")
+    content = TextAreaField('Content', validators=[DataRequired()])
+    title = StringField('Title', validators=[DataRequired(), Length(min=5, max=50)])
+    price = DecimalField('Price (If For Sale)', validators=[DataRequired(), NumberRange(min=0.0)])
+    forSale = BooleanField('Is This Image For Sale?')
+    submit = SubmitField('Post')
+
 
 class ReplyForm(FlaskForm):
     title = StringField('Title', validators=[DataRequired(), Length(min=5, max=50)])

@@ -4,6 +4,9 @@
     <p>{{ post.author.username }} <small>  Posted on {{ post.date.strftime('%Y-%m-%d') }}</small></p>
     <hr>
     <h3>{{ post.title }}</h3>
+    {% if post.forSale %}
+    <h4>For sale: <span class="thin">{{ "$%.2f"|format(post.price) }}</span></h4>
+    {% endif %}
     <img src="{{ url_for('static', filename='uploads/'+post.author.username+'/'+post.image) }}" width="500px">
     <p>{{ post.content }}</p>
     {% if current_user==post.author %}

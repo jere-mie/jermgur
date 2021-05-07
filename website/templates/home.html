@@ -11,6 +11,14 @@
         <p>{{ post.author.username }} <small>  Posted on {{ post.date.strftime('%Y-%m-%d') }}</small></p>
         <hr>
         <h3><a href="{{ url_for('seePost', post_id=post.anonid) }}" style="color:white">{{ post.title }}</a></h3>
+        {% if post.forSale %}
+        <h4>For sale: <span class="thin">{{ "$%.2f"|format(post.price) }}</span></h4>
+            {% if current_user!=post.author and current_user.is_authenticated %}
+            <a href="{{ url_for('buy', post_id=post.anonid) }}">Buy</a><br>  
+            {% endif %}
+
+        {% endif %}
+    
         <img src="{{ url_for('static', filename='uploads/'+post.author.username+'/'+post.image) }}" width="500px">
         <p>{{ post.content }}</p>
         {% if current_user==post.author %}

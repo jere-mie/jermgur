@@ -1,11 +1,12 @@
 from flask import render_template, url_for, flash, redirect, request
 from website import app, db
-from website.forms import Register, Login, PostForm, ReplyForm
+from website.forms import Register, Login, PostForm, ReplyForm, EditForm
 from website.models import User, Post, Reply, Sale
 from flask_login import login_user, current_user, logout_user, login_required
 import os
 import bcrypt
 import secrets
+import shutil
 
 @app.route('/home', methods=['GET'])
 @app.route('/', methods=['GET'])
@@ -40,7 +41,7 @@ def register():
         user = User(username=form.username.data, password=hashed)
         db.session.add(user)
         db.session.commit()
-        if not os.path.exists(f"website/uploads"):
+        if not os.path.exists(f"website/static/uploads"):
             os.mkdir(f"website/static/uploads")
         if not os.path.exists(f"website/uploads/{form.username.data}"):
             os.mkdir(f"website/static/uploads/{form.username.data}")
@@ -80,7 +81,7 @@ def newPost():
             temp = Post.query.filter_by(anonid=anonid).first()
             if not temp:
                 break
-        post = Post(title=form.title.data, content=form.content.data, author=current_user, public=form.public.data, image=form.image.data.filename, anonid=anonid)
+        post = Post(title=form.title.data, content=form.content.data, author=current_user, public=form.public.data, image=form.image.data.filename, anonid=anonid, price=form.price.data, forSale = form.forSale.data)
         db.session.add(post)
         db.session.commit()
         form.image.data.save(f"website/static/uploads/{current_user.username}/"+form.image.data.filename)
@@ -112,24 +113,28 @@ def updatePost(post_id):
     if post.author!=current_user:
         flash('You cannot update someone else\'s post!', 'danger')
         return redirect(url_for('home'))
-    form = PostForm()
+    form = EditForm()
     
     if form.validate_on_submit():
-        os.remove(f'website/static/uploads/{current_user.username}/{post.image}')
+        # os.remove(f'website/static/uploads/{current_user.username}/{post.image}')
         post.title = form.title.data
         post.content = form.content.data
-        post.image = form.image.data.filename
+        # post.image = form.image.data.filename
         post.public = form.public.data
+        post.price = form.price.data
+        post.forSale = form.forSale.data
         db.session.commit()
-        form.image.data.save(f"website/static/uploads/{current_user.username}/"+form.image.data.filename)
+        # form.image.data.save(f"website/static/uploads/{current_user.username}/"+form.image.data.filename)
         flash('You have successfully updated the post!', 'success')
         return redirect(url_for("home"))
     elif request.method == 'GET':
         form.title.data = post.title
         form.content.data = post.content
         form.public.data = post.public
-    return render_template("newPost.html", form=form, legend='Update Post')
-
+        form.price.data = post.price
+        form.forSale.data = post.forSale
+        return render_template("newPost.html", form=form, legend='Update Post', editing=True)
+    return 'big error'
 
 @app.route('/post/<post_id>', methods=['GET', 'POST'])
 def seePost(post_id):
@@ -149,3 +154,23 @@ def reply(post_id):
         flash('You have successfully added a reply!', 'success')
         return render_template('post.html', post=post)
     return render_template("reply.html", form=form, legend='Reply to a Post')
+
+@app.route('/post/<post_id>/buy', methods=['GET', 'POST'])
+@login_required
+def buy(post_id):
+    post = Post.query.filter_by(anonid=post_id).first()
+    if not post:
+        flash('Post not found!', 'danger')
+    elif post.author == current_user:
+        flash('You cannot buy your own post!', 'danger')
+    else:
+        if current_user.money >= post.price:
+            shutil.move(f"website/static/uploads/{post.author.username}/"+post.image, f"website/static/uploads/{current_user.username}/"+post.image)
+            current_user.money -= post.price
+            post.author.money += post.price
+            post.author = current_user
+            db.session.commit()
+            flash('Successfully bought the image!', 'success')
+        else:
+            flash('You did not have enough money!', 'danger')
+    return redirect(url_for('home'))
